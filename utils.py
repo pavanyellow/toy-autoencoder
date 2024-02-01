@@ -11,6 +11,8 @@ import plotly.express as px
 
 import transformer_lens.utils as utils
 
+DEVICE = torch.device('cpu')
+
 @dataclass
 class SAE_Config:
     input_size : int = 5
