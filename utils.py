@@ -9,6 +9,7 @@ import time
 import numpy as np
 import plotly.express as px
 
+import transformer_lens.utils as utils
 
 @dataclass
 class SAE_Config:
@@ -83,24 +84,9 @@ def get_reconstructed_loss(sp : SuperpositionModel, model : SAE, data: torch.Ten
 
 
 
-from functools import partial
-from typing import List, Optional, Union
 
-import einops
-import numpy as np
-import plotly.express as px
-import plotly.io as pio
-import torch
-from circuitsvis.attention import attention_heads
-from fancy_einsum import einsum
-from IPython.display import HTML, IFrame
-from jaxtyping import Float
 
-import transformer_lens.utils as utils
-from transformer_lens import ActivationCache, HookedTransformer
-from datasets import load_dataset
-torch.set_grad_enabled(False)
-print("Disabled automatic differentiation")
+
 
 def imshow(tensor, **kwargs):
     px.imshow(
