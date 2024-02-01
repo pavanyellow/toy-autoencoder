@@ -62,11 +62,68 @@ class SuperpositionModel(nn.Module):
         loss = (self.config.imp_vector*((target-output)**2)).mean()
         return loss
         
-    def forward(self, input, targets = None, return_hidden = False):
-         
+    def forward(self, input, targets = None, sae : SAE = None):
+        
+        
         hidden = self.encoder(input)
+        if sae:
+            hidden, _, _  = sae(hidden)
         final = self.decoder(hidden)
         logits = self.relu(final)
 
         loss = self.get_loss(targets, logits)
         return logits, loss, hidden
+
+
+def get_reconstructed_loss(sp : SuperpositionModel, model : SAE, data: torch.Tensor):
+    _, original_loss, _ = sp(data, data)
+    _, new_loss, _ = sp(data, data, sae = model)
+    ablated = (data**2).sum(-1).mean(0)
+    print (f"reconstructed loss {new_loss}, original {original_loss}. Percentage {(ablated-new_loss)*100/(ablated - original_loss)}%")
+
+
+
+from functools import partial
+from typing import List, Optional, Union
+
+import einops
+import numpy as np
+import plotly.express as px
+import plotly.io as pio
+import torch
+from circuitsvis.attention import attention_heads
+from fancy_einsum import einsum
+from IPython.display import HTML, IFrame
+from jaxtyping import Float
+
+import transformer_lens.utils as utils
+from transformer_lens import ActivationCache, HookedTransformer
+from datasets import load_dataset
+torch.set_grad_enabled(False)
+print("Disabled automatic differentiation")
+
+def imshow(tensor, **kwargs):
+    px.imshow(
+        utils.to_numpy(tensor),
+        color_continuous_midpoint=0.0,
+        color_continuous_scale="RdBu",
+        **kwargs,
+    ).show()
+
+
+def line(tensor, **kwargs):
+    px.line(
+        y=utils.to_numpy(tensor),
+        **kwargs,
+    ).show()
+
+
+def scatter(x, y, xaxis="", yaxis="", caxis="", **kwargs):
+    x = utils.to_numpy(x)
+    y = utils.to_numpy(y)
+    px.scatter(
+        y=y,
+        x=x,
+        labels={"x": xaxis, "y": yaxis, "color": caxis},
+        **kwargs,
+    ).show()
